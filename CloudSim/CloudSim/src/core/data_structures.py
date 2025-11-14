@@ -96,6 +96,31 @@ class FileChunk:
 
 
 @dataclass
+class FileMetadata:
+    """Metadata describing a stored file (used by distributed nodes)."""
+
+    file_id: str
+    file_name: str
+    total_size: int
+    chunk_count: int
+    replication_factor: int = 3
+    checksum: Optional[str] = None
+    created_at: float = field(default_factory=lambda: time.time())
+
+    def to_dict(self) -> dict:
+        """Serialize metadata to a dictionary for logging or network responses."""
+        return {
+            "file_id": self.file_id,
+            "file_name": self.file_name,
+            "total_size": self.total_size,
+            "chunk_count": self.chunk_count,
+            "replication_factor": self.replication_factor,
+            "checksum": self.checksum,
+            "created_at": self.created_at,
+        }
+
+
+@dataclass
 class FileTransfer:
     """
     Represents a file transfer operation with multiple chunks

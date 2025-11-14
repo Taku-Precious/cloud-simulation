@@ -87,8 +87,10 @@ class Message:
 class ProtocolHandler:
     """Handles network protocol encoding/decoding."""
     
-    # Protocol format: [4 bytes length][JSON message][optional binary data]
+    # Protocol format:
+    #   [4 bytes total length][4 bytes JSON length][JSON][optional binary data]
     HEADER_SIZE = 4
+    JSON_LENGTH_SIZE = 4
     MAX_MESSAGE_SIZE = 100 * 1024 * 1024  # 100 MB
     
     @staticmethod
@@ -103,20 +105,19 @@ class ProtocolHandler:
         """
         # Encode JSON message
         json_bytes = message.to_json().encode('utf-8')
-        
-        # Calculate total length
-        total_length = len(json_bytes)
-        if binary_data:
-            total_length += len(binary_data)
-        
-        # Create header (4 bytes, big-endian)
+        json_length = len(json_bytes)
+        binary_length = len(binary_data) if binary_data else 0
+
+        # Calculate total payload length (json length prefix + json + binary)
+        total_length = ProtocolHandler.JSON_LENGTH_SIZE + json_length + binary_length
+
+        # Create headers (big-endian)
         header = struct.pack('>I', total_length)
-        
-        # Combine all parts
+        json_header = struct.pack('>I', json_length)
+
         if binary_data:
-            return header + json_bytes + binary_data
-        else:
-            return header + json_bytes
+            return header + json_header + json_bytes + binary_data
+        return header + json_header + json_bytes
     
     @staticmethod
     def decode_message(data: bytes) -> tuple[Message, Optional[bytes]]:
@@ -136,24 +137,25 @@ class ProtocolHandler:
         if total_length > ProtocolHandler.MAX_MESSAGE_SIZE:
             raise ValueError(f"Message too large: {total_length} bytes")
         
-        # Extract message data
-        message_data = data[ProtocolHandler.HEADER_SIZE:]
+        # Extract payload
+        payload = data[ProtocolHandler.HEADER_SIZE:ProtocolHandler.HEADER_SIZE + total_length]
         
-        # Try to find where JSON ends and binary data begins
-        # JSON messages end with '}'
-        json_end = message_data.find(b'}') + 1
+        if len(payload) < ProtocolHandler.JSON_LENGTH_SIZE:
+            raise ValueError("Payload too short for JSON length header")
         
-        if json_end == 0:
-            raise ValueError("Invalid JSON message")
+        json_length = struct.unpack('>I', payload[:ProtocolHandler.JSON_LENGTH_SIZE])[0]
         
-        # Decode JSON
-        json_bytes = message_data[:json_end]
+        if json_length < 0 or json_length > total_length - ProtocolHandler.JSON_LENGTH_SIZE:
+            raise ValueError("Invalid JSON length in payload")
+        
+        json_start = ProtocolHandler.JSON_LENGTH_SIZE
+        json_end = json_start + json_length
+        json_bytes = payload[json_start:json_end]
         message = Message.from_json(json_bytes.decode('utf-8'))
         
-        # Extract binary data if present
         binary_data = None
-        if len(message_data) > json_end:
-            binary_data = message_data[json_end:]
+        if json_end < len(payload):
+            binary_data = payload[json_end:]
         
         return message, binary_data
     

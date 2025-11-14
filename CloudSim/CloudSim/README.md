@@ -68,10 +68,21 @@ cd "augment-projects/Distributed system and cloudcomputing/CloudSim"
 pip install -r requirements.txt
 ```
 
-3. **Run the demo:**
+3. **Run the in-memory demo (single process):**
 ```bash
 python main_demo.py
 ```
+
+4. **Run the distributed cluster (multi-process, real TCP stack):**
+```bash
+python run_distributed_cluster.py --nodes 3 --status-on-start
+```
+This helper script launches `start_coordinator.py` plus N `start_node.py` processes (optionally in separate Windows consoles with `--detach-terminals`). Once running, drive uploads/downloads via `cloudsim_client.py`:
+```bash
+python cloudsim_client.py upload ./samples/file.bin --coordinator localhost:5000
+python cloudsim_client.py status --coordinator localhost:5000
+```
+You can still start each process manually in its own terminal if desired.
 
 ### Running Tests
 
