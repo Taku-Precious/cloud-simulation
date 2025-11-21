@@ -1,0 +1,94 @@
+# CloudSim Configuration File
+# Distributed Cloud Storage Simulation
+# Author: Senior Cloud Architect
+# Date: November 11, 2025
+
+# System-wide settings
+system:
+  name: "CloudSim Distributed Storage"
+  version: "2.0.0"
+  environment: "production"  # development, staging, production
+  
+# Replication settings
+replication:
+  default_factor: 3  # Number of replicas per chunk
+  min_factor: 2      # Minimum replicas before warning
+  max_factor: 5      # Maximum replicas allowed
+  placement_strategy: "diverse"  # diverse, random, rack_aware
+  
+# Heartbeat & failure detection
+monitoring:
+  heartbeat_interval: 3      # seconds - how often nodes send heartbeat
+  failure_timeout: 30        # seconds - time before node considered dead
+  recovery_check_interval: 5 # seconds - how often to check for recovered nodes
+  enable_auto_recovery: true # automatically re-replicate on failure
+  
+# Chunk sizing strategy
+chunking:
+  small_file_threshold: 10485760    # 10 MB in bytes
+  medium_file_threshold: 104857600  # 100 MB in bytes
+  small_chunk_size: 524288          # 512 KB in bytes
+  medium_chunk_size: 2097152        # 2 MB in bytes
+  large_chunk_size: 10485760        # 10 MB in bytes
+  
+# Network settings
+network:
+  max_bandwidth_per_node: 10000  # Mbps
+  connection_timeout: 30         # seconds
+  retry_attempts: 3              # number of retries on failure
+  retry_delay: 2                 # seconds between retries
+  enable_bandwidth_throttling: true
+  
+# Storage settings
+storage:
+  enable_compression: false      # compress chunks before storage
+  enable_encryption: false       # encrypt chunks (future feature)
+  checksum_algorithm: "sha256"   # md5, sha1, sha256, sha512
+  verify_on_read: true          # verify checksum when reading
+  verify_on_write: true         # verify checksum when writing
+  
+# Load balancing
+load_balancing:
+  strategy: "least_loaded"  # least_loaded, round_robin, random, weighted
+  rebalance_threshold: 0.2  # trigger rebalance if imbalance > 20%
+  enable_auto_rebalance: false  # automatically rebalance (future)
+  
+# Logging configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "detailed"  # simple, detailed, json
+  log_to_file: true
+  log_to_console: true
+  log_file_path: "logs/cloudsim.log"
+  max_log_file_size: 10485760  # 10 MB
+  backup_count: 5  # number of backup log files
+  
+# Performance & optimization
+performance:
+  enable_caching: false  # cache frequently accessed chunks
+  cache_size_mb: 100     # cache size in MB
+  max_concurrent_transfers: 10  # per node
+  chunk_transfer_timeout: 300   # seconds
+  enable_parallel_transfers: true
+  
+# Testing & debugging
+testing:
+  enable_failure_injection: false  # simulate random failures
+  failure_probability: 0.01        # 1% chance of failure
+  enable_latency_simulation: true  # simulate network latency
+  base_latency_ms: 10              # base network latency
+  
+# Metrics & monitoring
+metrics:
+  enable_prometheus: false  # export metrics to Prometheus
+  prometheus_port: 9090
+  metrics_interval: 60      # seconds - how often to collect metrics
+  enable_detailed_metrics: true
+  
+# Security (future features)
+security:
+  enable_authentication: false
+  enable_authorization: false
+  enable_encryption: false
+  enable_audit_log: false
+
